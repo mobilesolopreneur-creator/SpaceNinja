@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HiddenSpaces AI – Space Ninja</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+// Voice input (Web Speech API)
+const voiceBtn = document.getElementById('voice-btn');
+if (voiceBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+
+  voiceBtn.addEventListener('click', () => {
+    recognition.start();
+    voiceBtn.innerHTML = '<i class="fas fa-wave-square"></i> Listening…';
+  });
+
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    previewInfo.textContent = `Voice intent: “${transcript}”`;
+    voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Voice';
+  };
+
+  recognition.onerror = () => {
+    voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Voice';
+  };
+}
+</script>
+  <style>
+    :root {
+      --ninja-black: #0a0a0f;
+      --ninja-dark: #12121a;
+      --ninja-gray: #1a1a25;
+      --ninja-light: #2a2a3a;
+      --ninja-red: #ff2d55;
+      --ninja-orange: #ff6b35;
+      --ninja-gold: #ffd700;
+      --ninja-cyan: #00d4ff;
+      --ninja-green: #00ff88;
+      --ninja-purple: #a855f7;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --text-muted: #606070;
+      --glow-red: 0 0 20px rgba(255, 45, 85, 0.5);
+      --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.5);
+      --glow-green: 0 0 20px rgba(0, 255, 136, 0.5);
+    }
+
+    .dark {
+      --bg-primary: var(--ninja-black);
+      --bg-secondary: var(--ninja-dark);
+      --bg-card: var(--ninja-gray);
+      --bg-elevated: var(--ninja-light);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--ninja-black);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .bg-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(255, 45, 85, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 45, 85, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-radial {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255, 45, 85, 0.1) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* App Container */
+    .app-container {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 45, 85, 0.2);
+      background: rgba(10, 10, 15, 0.9);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--ninja-red), var(--ninja-orange));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: var(--glow-red);
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(255, 45, 85, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(255, 45, 85, 0.7); }
+    }
+
+    .logo-text {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+
+    .logo-text span {
+      color: var(--ninja-red);
+    }
+
+    .header-tagline {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 30px 0;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(28px, 6vw, 42px);
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--ninja-red) 50%, var(--ninja-orange) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .tagline-cycle {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: rgba(255, 45, 85, 0.1);
+      border: 1px solid rgba(255, 45, 85, 0.3);
+      border-radius: 30px;
+      display: inline-block;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      color: var(--ninja-red);
+      letter-spacing: 1px;
+      animation: borderPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes borderPulse {
+      0%, 100% { border-color: rgba(255, 45, 85, 0.3); }
+      50% { border-color: rgba(255, 45, 85, 0.8); }
+    }
+
+    /* Upload Section */
+    .upload-section {
+      margin: 30px 0;
+      animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .upload-zone {
+      border: 2px dashed rgba(255, 45, 85, 0.4);
+      border-radius: 20px;
+      padding: 50px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(26, 26, 37, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 45, 85, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .upload-zone:hover::before {
+      left: 100%;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--ninja-red);
+      background: rgba(255, 45, 85, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .upload-zone.dragover {
+      border-color: var(--ninja-cyan);
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      color: var(--ninja-red);
+      margin-bottom: 16px;
+    }
+
+    .upload-text h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .upload-text p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .upload-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--ninja-red), var(--ninja-orange));
+      color: white;
+      box-shadow: 0 4px 20px rgba(255, 45, 85, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(255, 45, 85, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--ninja-cyan);
+    }
+
+    .btn-ninja {
+      background: linear-gradient(135deg, var(--ninja-green), var(--ninja-cyan));
+      color: var(--ninja-black);
+      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-ninja:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(0, 255, 136, 0.5);
+    }
+
+    #file-input, #camera-input {
+      display: none;
+    }
+
+    /* Preview Section */
+    .preview-section {
+      display: none;
+      margin: 20px 0;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .preview-section.active {
+      display: block;
+    }
+
+    .preview-container {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--ninja-gray);
+    }
+
+    .preview-image {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .preview-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .preview-info {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-small {
+      padding: 10px 18px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    /* Analysis Section */
+    .analysis-section {
+      display: none;
+      margin: 30px 0;
+    }
+
+    .analysis-section.active {
+      display: block;
+    }
+
+    /* Loading State */
+    .loading-container {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .ninja-loader {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 30px;
+      position: relative;
+    }
+
+    .ninja-loader::before,
+    .ninja-loader::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .ninja-loader::before {
+      width: 100%;
+      height: 100%;
+      border: 3px solid transparent;
+      border-top-color: var(--ninja-red);
+      border-right-color: var(--ninja-orange);
+      animation: spin 1s linear infinite;
+    }
+
+    .ninja-loader::after {
+      width: 60%;
+      height: 60%;
+      top: 20%;
+      left: 20%;
+      border: 3px solid transparent;
+      border-bottom-color: var(--ninja-cyan);
+      border-left-color: var(--ninja-green);
+      animation: spin 0.7s linear infinite reverse;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      color: var(--ninja-red);
+      margin-bottom: 10px;
+    }
+
+    .loading-subtext {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .loading-stages {
+      margin-top: 30px;
+      text-align: left;
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .stage {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      opacity: 0.3;
+      transition: all 0.3s ease;
+    }
+
+    .stage.active {
+      opacity: 1;
+    }
+
+    .stage.complete {
+      opacity: 0.7;
+    }
+
+    .stage.complete .stage-icon {
+      color: var(--ninja-green);
+    }
+
+    .stage-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--ninja-red);
+    }
+
+    .stage-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Results Section */
+    .results-container {
+      display: none;
+    }
+
+    .results-container.active {
+      display: block;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .result-card {
+      background: rgba(26, 26, 37, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .result-card:hover {
+      border-color: rgba(255, 45, 85, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .card-icon.red { background: rgba(255, 45, 85, 0.2); color: var(--ninja-red); }
+    .card-icon.cyan { background: rgba(0, 212, 255, 0.2); color: var(--ninja-cyan); }
+    .card-icon.green { background: rgba(0, 255, 136, 0.2); color: var(--ninja-green); }
+    .card-icon.orange { background: rgba(255, 107, 53, 0.2); color: var(--ninja-orange); }
+    .card-icon.purple { background: rgba(168, 85, 247, 0.2); color: var(--ninja-purple); }
+    .card-icon.gold { background: rgba(255, 215, 0, 0.2); color: var(--ninja-gold); }
+
+    .card-title {
+      flex: 1;
+    }
+
+    .card-title h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .card-title span {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-toggle {
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: transform 0.3s ease;
+    }
+
+    .card-header.expanded .card-toggle {
+      transform: rotate(180deg);
+    }
+
+    .card-content {
+      padding: 0 20px;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+
+    .card-content.expanded {
+      padding: 20px;
+      max-height: 2000px;
+    }
+
+    .card-content p, .card-content li {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+
+    .card-content ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card-content li {
+      padding: 8px 0;
+      padding-left: 24px;
+      position: relative;
+    }
+
+    .card-content li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--ninja-red);
+    }
+
+    .card-content h4 {
+      font-size: 14px;
+      color: var(--ninja-cyan);
+      margin: 16px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-content strong {
+      color: var(--text-primary);
+    }
+
+    /* Dimension Grid */
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .dimension-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .dimension-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ninja-cyan);
+    }
+
+    .dimension-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* Shopping List */
+    .shopping-list {
+      margin: 16px 0;
+    }
+
+    .shopping-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .shopping-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--ninja-red);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .shopping-checkbox.checked {
+      background: var(--ninja-green);
+      border-color: var(--ninja-green);
+    }
+
+    .shopping-checkbox.checked::after {
+      content: '✓';
+      color: var(--ninja-black);
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .shopping-details {
+      flex: 1;
+    }
+
+    .shopping-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .shopping-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .shopping-price {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      color: var(--ninja-green);
+    }
+
+    /* Safety Alerts */
+    .safety-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px;
+      background: rgba(255, 45, 85, 0.1);
+      border: 1px solid rgba(255, 45, 85, 0.3);
+      border-radius: 12px;
+      margin: 12px 0;
+    }
+
+    .safety-alert.warning {
+      background: rgba(255, 215, 0, 0.1);
+      border-color: rgba(255, 215, 0, 0.3);
+    }
+
+    .safety-alert.info {
+      background: rgba(0, 212, 255, 0.1);
+      border-color: rgba(0, 212, 255, 0.3);
+    }
+
+    .safety-icon {
+      font-size: 20px;
+      color: var(--ninja-red);
+      flex-shrink: 0;
+    }
+
+    .safety-alert.warning .safety-icon {
+      color: var(--ninja-gold);
+    }
+
+    .safety-alert.info .safety-icon {
+      color: var(--ninja-cyan);
+    }
+
+    .safety-text {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .action-btn {
+      padding: 16px;
+      background: rgba(26, 26, 37, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 45, 85, 0.1);
+      border-color: var(--ninja-red);
+      transform: translateY(-2px);
+    }
+
+    .action-btn i {
+      font-size: 24px;
+      color: var(--ninja-red);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .action-btn span {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Space Type Badges */
+    .space-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--ninja-red), var(--ninja-orange));
+      border-radius: 30px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal {
+      background: var(--ninja-dark);
+      border: 1px solid rgba(255, 45, 85, 0.3);
+      border-radius: 20px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 45, 85, 0.2);
+      color: var(--ninja-red);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 20px;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: auto;
+    }
+
+    .footer p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .footer span {
+      color: var(--ninja-red);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .header {
+        padding: 12px 16px;
+      }
+
+      .logo-text {
+        font-size: 15px;
+      }
+
+      .header-tagline {
+        display: none;
+      }
+
+      .main-content {
+        padding: 16px;
+      }
+
+      .hero {
+        padding: 20px 0;
+      }
+
+      .upload-zone {
+        padding: 40px 20px;
+      }
+
+      .upload-icon {
+        font-size: 36px;
+      }
+
+      .upload-buttons {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .dimension-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Markdown content styling */
+    .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+      color: var(--ninja-cyan);
+      margin: 20px 0 12px;
+    }
+
+    .markdown-content h1 { font-size: 20px; }
+    .markdown-content h2 { font-size: 17px; }
+    .markdown-content h3 { font-size: 15px; }
+
+    .markdown-content code {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--ninja-orange);
+    }
+
+    .markdown-content pre {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 16px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    .markdown-content pre code {
+      padding: 0;
+      background: transparent;
+    }
+
+    .markdown-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+
+    .markdown-content th, .markdown-content td {
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: left;
+    }
+
+    .markdown-content th {
+      background: rgba(255, 45, 85, 0.1);
+      color: var(--ninja-red);
+    }
+
+    .markdown-content blockquote {
+      border-left: 3px solid var(--ninja-red);
+      padding-left: 16px;
+      margin: 16px 0;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    /* New Analysis Button */
+    .new-analysis-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--ninja-red), var(--ninja-orange));
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255, 45, 85, 0.4);
+      z-index: 99;
+      display: none;
+      transition: all 0.3s ease;
+    }
+
+    .new-analysis-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 30px rgba(255, 45, 85, 0.6);
+    }
+
+    .new-analysis-btn.visible {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body class="dark">
+  <div class="bg-grid"></div>
+  <div class="bg-radial"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">🥷</div>
+        <div>
+          <div class="logo-text">Hidden<span>Spaces</span> AI</div>
+          <div class="header-tagline">Space Ninja Intelligence</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero -->
+      <section class="hero" id="hero-section">
+        <h1>Snap. Ninja. Done.</h1>
+        <p>Point your camera at any space. Our AI ninja will analyze dimensions, detect hidden structures, identify objects, and generate a complete action plan.</p>
+        <div class="tagline-cycle" id="tagline-display">🥷 Ninja eyes see all.</div>
+      </section>
+
+      <!-- Upload Section -->
+      <section class="upload-section" id="upload-section">
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-icon"><i class="fas fa-crosshairs"></i></div>
+          <div class="upload-text">
+            <h3>Target Your Space</h3>
+            <p>Drop an image here or capture with your camera</p>
+          </div>
+<button class="btn btn-secondary" id="voice-btn">
+  <i class="fas fa-microphone"></i> Voice
+</button>
+          <div class="upload-buttons">
+            <button class="btn btn-primary" id="upload-btn">
+              <i class="fas fa-image"></i> Upload Image
+            </button>
+            <button class="btn btn-secondary" id="camera-btn">
+              <i class="fas fa-camera"></i> Use Camera
+            </button>
+          </div>
+          <input type="file" id="file-input" accept="image/*">
+          <input type="file" id="camera-input" accept="image/*" capture="environment">
+        </div>
+      </section>
+
+      <!-- Preview Section -->
+      <section class="preview-section" id="preview-section">
+        <div class="preview-container">
+          <img id="preview-image" class="preview-image" alt="Space preview">
+          <div class="preview-overlay">
+            <div class="preview-info" id="preview-info">Ready for analysis</div>
+            <div class="preview-actions">
+              <button class="btn btn-secondary btn-small" id="change-image-btn">
+                <i class="fas fa-redo"></i> Change
+              </button>
+              <button class="btn btn-ninja btn-small" id="analyze-btn">
+                <i class="fas fa-bolt"></i> Analyze
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analysis Section -->
+      <section class="analysis-section" id="analysis-section">
+        <!-- Loading State -->
+        <div class="loading-container" id="loading-container">
+          <div class="ninja-loader"></div>
+          <div class="loading-text">Ninja Analysis In Progress</div>
+          <div class="loading-subtext" id="loading-status">Initializing stealth scan...</div>
+          <div class="loading-stages">
+            <div class="stage" id="stage-1">
+              <div class="stage-icon"><i class="fas fa-eye"></i></div>
+              <div class="stage-text">Identifying space type...</div>
+            </div>
+            <div class="stage" id="stage-2">
+              <div class="stage-icon"><i class="fas fa-ruler-combined"></i></div>
+              <div class="stage-text">Calculating dimensions...</div>
+            </div>
+            <div class="stage" id="stage-3">
+              <div class="stage-icon"><i class="fas fa-search"></i></div>
+              <div class="stage-text">Detecting hidden structures...</div>
+            </div>
+            <div class="stage" id="stage-4">
+              <div class="stage-icon"><i class="fas fa-cubes"></i></div>
+              <div class="stage-text">Identifying objects...</div>
+            </div>
+            <div class="stage" id="stage-5">
+              <div class="stage-icon"><i class="fas fa-magic"></i></div>
+              <div class="stage-text">Generating recommendations...</div>
+            </div>
+          </div>
+          <button class="btn btn-secondary" id="cancel-analysis-btn" style="margin-top: 30px;">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+
+        <!-- Results -->
+        <div class="results-container" id="results-container">
+          <!-- Results will be dynamically inserted here -->
+        </div>
+      </section>
+    </main>
+
+    <!-- New Analysis FAB -->
+    <button class="new-analysis-btn" id="new-analysis-btn" title="New Analysis">
+      <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Powered by <span>HiddenSpaces AI</span> • Stealth Intelligence System</p>
+    </footer>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🥷 Confirm Action</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Modal content will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Taglines rotation
+    const taglines = [
+      "🥷 Ninja eyes see all.",
+      "⚡ Snap. Ninja. Done.",
+      "🎯 Point. Plan. Ninja.",
+      "🔥 Chaos? Ninja's got this.",
+      "✨ Instant magic, zero sweat.",
+      "🛡️ Your space, stealth upgraded.",
+      "⚔️ Slice through clutter, silently.",
+      "🌟 Turn 'meh' into 'WOW' instantly."
+    ];
+
+    let taglineIndex = 0;
+    const taglineDisplay = document.getElementById('tagline-display');
+
+    setInterval(() => {
+      taglineIndex = (taglineIndex + 1) % taglines.length;
+      taglineDisplay.style.opacity = '0';
+      setTimeout(() => {
+        taglineDisplay.textContent = taglines[taglineIndex];
+        taglineDisplay.style.opacity = '1';
+      }, 300);
+    }, 4000);
+
+    // Dark mode detection
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+      if (event.matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    });
+
+    // DOM Elements
+    const uploadZone = document.getElementById('upload-zone');
+    const uploadBtn = document.getElementById('upload-btn');
+    const cameraBtn = document.getElementById('camera-btn');
+    const fileInput = document.getElementById('file-input');
+    const cameraInput = document.getElementById('camera-input');
+    const previewSection = document.getElementById('preview-section');
+    const previewImage = document.getElementById('preview-image');
+    const previewInfo = document.getElementById('preview-info');
+    const changeImageBtn = document.getElementById('change-image-btn');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const uploadSection = document.getElementById('upload-section');
+    const heroSection = document.getElementById('hero-section');
+    const analysisSection = document.getElementById('analysis-section');
+    const loadingContainer = document.getElementById('loading-container');
+    const resultsContainer = document.getElementById('results-container');
+    const newAnalysisBtn = document.getElementById('new-analysis-btn');
+
+    let currentImageFile = null;
+
+    // Drag and drop
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type.startsWith('image/')) {
+        handleImageFile(files[0]);
+      }
+    });
+
+    // Upload button click
+    uploadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    // Camera button click
+    cameraBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cameraInput.click();
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleImageFile(e.target.files[0]);
+      }
+    });
+
+    // Camera input change
+    cameraInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleImageFile(e.target.files[0]);
+      }
+    });
+
+    // Handle image file
+    function handleImageFile(file) {
+      currentImageFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        previewInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
+        showPreview();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // Show preview
+    function showPreview() {
+      uploadSection.style.display = 'none';
+      previewSection.classList.add('active');
+    }
+
+    // Change image
+    changeImageBtn.addEventListener('click', () => {
+      resetToUpload();
+    });
+
+    // Reset to upload state
+    function resetToUpload() {
+      currentImageFile = null;
+      previewSection.classList.remove('active');
+      uploadSection.style.display = 'block';
+      heroSection.style.display = 'block';
+      analysisSection.classList.remove('active');
+      resultsContainer.classList.remove('active');
+      resultsContainer.innerHTML = '';
+      newAnalysisBtn.classList.remove('visible');
+      fileInput.value = '';
+      cameraInput.value = '';
+    }
+
+    // New analysis button
+    newAnalysisBtn.addEventListener('click', resetToUpload);
+
+    // Analyze button
+    analyzeBtn.addEventListener('click', () => {
+      if (currentImageFile) {
+        startAnalysis();
+      }
+    });
+
+    // Cancel analysis button
+    document.getElementById('cancel-analysis-btn').addEventListener('click', () => {
+      cancelAnalysis();
+    });
+
+    // Start analysis
+    let analysisTimeout = null;
+    let stageInterval = null;
+    let isAnalyzing = false;
+
+    async function startAnalysis() {
+      if (isAnalyzing) return;
+      isAnalyzing = true;
+
+      heroSection.style.display = 'none';
+      previewSection.classList.remove('active');
+      analysisSection.classList.add('active');
+      loadingContainer.style.display = 'block';
+      resultsContainer.classList.remove('active');
+
+      // Reset stages
+      const stages = document.querySelectorAll('.stage');
+      stages.forEach(s => s.classList.remove('active', 'complete'));
+
+      // Animate loading stages
+      let currentStage = 0;
+
+      stageInterval = setInterval(() => {
+        if (currentStage > 0 && stages[currentStage - 1]) {
+          stages[currentStage - 1].classList.remove('active');
+          stages[currentStage - 1].classList.add('complete');
+        }
+        if (currentStage < stages.length) {
+          stages[currentStage].classList.add('active');
+          currentStage++;
+        } else {
+          // Loop back for long waits
+          currentStage = 0;
+          stages.forEach(s => s.classList.remove('active', 'complete'));
+        }
+      }, 1500);
+
+      // Set timeout for analysis (60 seconds)
+      analysisTimeout = setTimeout(() => {
+        cleanupAnalysis();
+        showError('Analysis timed out. The AI is taking too long to respond. Please try again with a clearer image.');
+      }, 60000);
+
+      // Register handler for AI response
+      window.Poe.registerHandler('space-analysis-handler', (result) => {
+        if (!isAnalyzing) return;
+
+        const msg = result.responses[0];
+
+        if (msg.status === 'error') {
+          cleanupAnalysis();
+          showError(msg.statusText || 'Analysis failed. Please try again.');
+        } else if (msg.status === 'incomplete') {
+          // Still streaming - show partial content preview
+          document.getElementById('loading-status').textContent = 'Ninja intelligence processing...';
+          if (msg.content && msg.content.length > 50) {
+            document.getElementById('loading-status').textContent = 'Generating detailed report...';
+          }
+        } else if (msg.status === 'complete') {
+          cleanupAnalysis();
+          displayResults(msg.content);
+        }
+      });
+
+      // Send image to AI for analysis
+      const prompt = `Analyze this space image and return a JSON report. Be concise but thorough.
+
+Return ONLY valid JSON (no markdown, no code blocks):
+{
+  "spaceType": "Room Type",
+  "confidence": 90,
+  "dimensions": {"width": "12 ft", "length": "15 ft", "height": "9 ft", "area": "180 sq ft", "volume": "1620 cu ft"},
+  "hiddenStructures": [{"type": "Electrical outlet", "location": "Wall description", "status": "Active"}],
+  "objectsDetected": [{"name": "Item", "position": "Location", "condition": "Good", "dimensions": "estimate"}],
+  "safetyAlerts": [{"type": "warning", "message": "Safety note"}],
+  "recommendations": [{"title": "Improvement", "description": "Details", "priority": "High", "estimatedCost": "$100-200"}],
+  "shoppingList": [{"item": "Product name", "quantity": 1, "estimatedPrice": "$50", "purpose": "Why needed"}],
+  "installationSteps": ["Step 1", "Step 2"],
+  "ninjaInsight": "Brief expert insight about the space."
+}`;
+
+      try {
+        await window.Poe.sendUserMessage(`@Claude-Sonnet-4.5 ${prompt}`, {
+          attachments: [currentImageFile],
+          handler: 'space-analysis-handler',
+          stream: true,
+          openChat: false
+        });
+      } catch (err) {
+        cleanupAnalysis();
+        const errorMsg = err.message || String(err);
+        if (errorMsg.includes('USER_REJECTED')) {
+          showError('Analysis was cancelled.');
+        } else {
+          showError('Failed to start analysis: ' + errorMsg);
+        }
+      }
+    }
+
+    function cleanupAnalysis() {
+      isAnalyzing = false;
+      if (analysisTimeout) {
+        clearTimeout(analysisTimeout);
+        analysisTimeout = null;
+      }
+      if (stageInterval) {
+        clearInterval(stageInterval);
+        stageInterval = null;
+      }
+      loadingContainer.style.display = 'none';
+      const stages = document.querySelectorAll('.stage');
+      stages.forEach(s => s.classList.remove('active', 'complete'));
+    }
+
+    function cancelAnalysis() {
+      cleanupAnalysis();
+      resetToUpload();
+    }
+
+    // Display results
+    function displayResults(content) {
+      let data;
+      try {
+        // Try to parse JSON directly
+        data = JSON.parse(content);
+      } catch (e) {
+        // Try to extract JSON from markdown code blocks
+        const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+          try {
+            data = JSON.parse(jsonMatch[1].trim());
+          } catch (e2) {
+            // Fall back to displaying as markdown
+            displayMarkdownResults(content);
+            return;
+          }
+        } else {
+          displayMarkdownResults(content);
+          return;
+        }
+      }
+
+      resultsContainer.innerHTML = generateResultsHTML(data);
+      resultsContainer.classList.add('active');
+      newAnalysisBtn.classList.add('visible');
+
+      // Add event listeners to cards
+      setupCardToggles();
+      setupShoppingCheckboxes();
+    }
+
+    // Generate results HTML
+    function generateResultsHTML(data) {
+      return `
+        <!-- Space Identification -->
+        <div class="result-card">
+          <div class="card-header expanded" data-card="space-id">
+            <div class="card-icon red"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="card-title">
+              <h3>Space Identified</h3>
+              <span>Confidence: ${data.confidence || 95}%</span>
+            </div>
+            <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="card-content expanded">
+            <div class="space-type-badge">
+              <i class="fas fa-home"></i>
+              ${data.spaceType || 'Unknown Space'}
+            </div>
+            ${data.ninjaInsight ? `<p style="font-style: italic; color: var(--ninja-cyan);">"${data.ninjaInsight}"</p>` : ''}
+          </div>
+        </div>
+
+        <!-- Dimensions -->
+        <div class="result-card">
+          <div class="card-header expanded" data-card="dimensions">
+            <div class="card-icon cyan"><i class="fas fa-ruler-combined"></i></div>
+            <div class="card-title">
+              <h3>Dimensions</h3>
+              <span>Estimated Measurements</span>
+            </div>
+            <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="card-content expanded">
+            <div class="dimension-grid">
+              ${data.dimensions ? `
+                <div class="dimension-item">
+                  <div class="dimension-value">${data.dimensions.width || 'N/A'}</div>
+                  <div class="dimension-label">Width</div>
+                </div>
+                <div class="dimension-item">
+                  <div class="dimension-value">${data.dimensions.length || 'N/A'}</div>
+                  <div class="dimension-label">Length</div>
+                </div>
+                <div class="dimension-item">
+                  <div class="dimension-value">${data.dimensions.height || 'N/A'}</div>
+                  <div class="dimension-label">Height</div>
+                </div>
+                <div class="dimension-item">
+                  <div class="dimension-value">${data.dimensions.area || 'N/A'}</div>
+                  <div class="dimension-label">Area</div>
+                </div>
+                <div class="dimension-item">
+                  <div class="dimension-value">${data.dimensions.volume || 'N/A'}</div>
+                  <div class="dimension-label">Volume</div>
+                </div>
+              ` : '<p>Dimensions not available</p>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden Structures -->
+        <div class="result-card">
+          <div class="card-header" data-card="hidden">
+            <div class="card-icon purple"><i class="fas fa-eye-slash"></i></div>
+            <div class="card-title">
+              <h3>Hidden Structures</h3>
+              <span>${data.hiddenStructures ? data.hiddenStructures.length : 0} detected</span>
+            </div>
+            <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="card-content">
+            ${data.hiddenStructures && data.hiddenStructures.length > 0 ? `
+              <ul>
+                ${data.hiddenStructures.map(s => `
+                  <li><strong>${s.type}</strong> - ${s.location} (${s.status})</li>
+                `).join('')}
+              </ul>
+            ` : '<p>No hidden structures detected</p>'}
+          </div>
+        </div>
+
+        <!-- Objects Detected -->
+        <div class="result-card">
+          <div class="card-header" data-card="objects">
+            <div class="card-icon orange"><i class="fas fa-cubes"></i></div>
+            <div class="card-title">
+              <h3>Objects Detected</h3>
+              <span>${data.objectsDetected ? data.objectsDetected.length : 0} items</span>
+            </div>
+            <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="card-content">
+            ${data.objectsDetected && data.objectsDetected.length > 0 ? `
+              <ul>
+                ${data.objectsDetected.map(o => `
+                  <li><strong>${o.name}</strong> - ${o.position}${o.dimensions ? ` (${o.dimensions})` : ''} - ${o.condition}</li>
+                `).join('')}
+              </ul>
+            ` : '<p>No specific objects detected</p>'}
+          </div>
+        </div>
+
+        <!-- Safety Alerts -->
+        ${data.safetyAlerts && data.safetyAlerts.length > 0 ? `
+          <div class="result-card">
+            <div class="card-header expanded" data-card="safety">
+              <div class="card-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+              <div class="card-title">
+                <h3>Safety Alerts</h3>
+                <span>${data.safetyAlerts.length} notices</span>
+              </div>
+              <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+            </div>
+            <div class="card-content expanded">
+              ${data.safetyAlerts.map(a => `
+                <div class="safety-alert ${a.type || 'warning'}">
+                  <div class="safety-icon"><i class="fas fa-${a.type === 'info' ? 'info-circle' : 'exclamation-triangle'}"></i></div>
+                  <div class="safety-text">${a.message}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Recommendations -->
+        <div class="result-card">
+          <div class="card-header expanded" data-card="recommendations">
+            <div class="card-icon green"><i class="fas fa-lightbulb"></i></div>
+            <div class="card-title">
+              <h3>Ninja Recommendations</h3>
+              <span>Enhancement suggestions</span>
+            </div>
+            <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="card-content expanded">
+            ${data.recommendations && data.recommendations.length > 0 ? `
+              <ul>
+                ${data.recommendations.map(r => `
+                  <li>
+                    <strong>${r.title}</strong> (${r.priority} priority)
+                    <br><span style="color: var(--text-secondary);">${r.description}</span>
+                    ${r.estimatedCost ? `<br><span style="color: var(--ninja-green);">Est. Cost: ${r.estimatedCost}</span>` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            ` : '<p>No specific recommendations at this time.</p>'}
+          </div>
+        </div>
+
+        <!-- Shopping List -->
+        <div class="result-card">
+          <div class="card-header expanded" data-card="shopping">
+            <div class="card-icon gold"><i class="fas fa-shopping-cart"></i></div>
+            <div class="card-title">
+              <h3>Shopping List</h3>
+              <span>${data.shoppingList ? data.shoppingList.length : 0} items</span>
+            </div>
+            <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="card-content expanded">
+            <div class="shopping-list">
+              ${data.shoppingList && data.shoppingList.length > 0 ? data.shoppingList.map((item, i) => `
+                <div class="shopping-item">
+                  <div class="shopping-checkbox" data-index="${i}"></div>
+                  <div class="shopping-details">
+                    <div class="shopping-name">${item.item}</div>
+                    <div class="shopping-meta">Qty: ${item.quantity} • ${item.purpose}</div>
+                  </div>
+                  <div class="shopping-price">${item.estimatedPrice}</div>
+                </div>
+              `).join('') : '<p>No items needed</p>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Installation Steps -->
+        ${data.installationSteps && data.installationSteps.length > 0 ? `
+          <div class="result-card">
+            <div class="card-header" data-card="installation">
+              <div class="card-icon cyan"><i class="fas fa-tools"></i></div>
+              <div class="card-title">
+                <h3>Installation Guide</h3>
+                <span>${data.installationSteps.length} steps</span>
+              </div>
+              <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+            </div>
+            <div class="card-content">
+              <ol style="padding-left: 20px;">
+                ${data.installationSteps.map(step => `<li style="padding: 8px 0; color: var(--text-secondary);">${step}</li>`).join('')}
+              </ol>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <div class="action-btn" onclick="exportReport()">
+            <i class="fas fa-file-export"></i>
+            <span>Export Report</span>
+          </div>
+          <div class="action-btn" onclick="shareResults()">
+            <i class="fas fa-share-alt"></i>
+            <span>Share Results</span>
+          </div>
+          <div class="action-btn" onclick="generateBlueprint()">
+            <i class="fas fa-drafting-compass"></i>
+            <span>Generate Blueprint</span>
+          </div>
+          <div class="action-btn" onclick="autoProcure()">
+            <i class="fas fa-truck"></i>
+            <span>Auto Procure</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Display markdown results as fallback
+    function displayMarkdownResults(content) {
+      resultsContainer.innerHTML = `
+        <div class="result-card">
+          <div class="card-header expanded">
+            <div class="card-icon cyan"><i class="fas fa-file-alt"></i></div>
+            <div class="card-title">
+              <h3>Analysis Results</h3>
+              <span>Ninja Intelligence Report</span>
+            </div>
+          </div>
+          <div class="card-content expanded">
+            <div class="markdown-content">
+              ${marked.parse(content)}
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <div class="action-btn" onclick="exportReport()">
+            <i class="fas fa-file-export"></i>
+            <span>Export Report</span>
+          </div>
+          <div class="action-btn" onclick="shareResults()">
+            <i class="fas fa-share-alt"></i>
+            <span>Share Results</span>
+          </div>
+        </div>
+      `;
+      resultsContainer.classList.add('active');
+      newAnalysisBtn.classList.add('visible');
+    }
+
+    // Setup card toggles
+    function setupCardToggles() {
+      document.querySelectorAll('.card-header').forEach(header => {
+        header.addEventListener('click', () => {
+          header.classList.toggle('expanded');
+          const content = header.nextElementSibling;
+          content.classList.toggle('expanded');
+        });
+      });
+    }
+
+    // Setup shopping checkboxes
+    function setupShoppingCheckboxes() {
+      document.querySelectorAll('.shopping-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('click', () => {
+          checkbox.classList.toggle('checked');
+        });
+      });
+    }
+
+    // Show error
+    function showError(message) {
+      resultsContainer.innerHTML = `
+        <div class="result-card">
+          <div class="card-header expanded">
+            <div class="card-icon red"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="card-title">
+              <h3>Analysis Error</h3>
+              <span>Something went wrong</span>
+            </div>
+          </div>
+          <div class="card-content expanded">
+            <p style="color: var(--ninja-red);">${message}</p>
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="resetToUpload()">
+              <i class="fas fa-redo"></i> Try Again
+            </button>
+          </div>
+        </div>
+      `;
+      resultsContainer.classList.add('active');
+      newAnalysisBtn.classList.add('visible');
+    }
+
+    // Action functions
+    function exportReport() {
+      showModal('Export Report', `
+        <p>Your ninja analysis report is ready for export.</p>
+        <div style="margin-top: 20px;">
+          <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="downloadReport('pdf')">
+            <i class="fas fa-file-pdf"></i> Download PDF
+          </button>
+          <button class="btn btn-secondary" style="width: 100%;" onclick="downloadReport('json')">
+            <i class="fas fa-file-code"></i> Download JSON
+          </button>
+        </div>
+      `);
+    }
+
+    function shareResults() {
+      showModal('Share Results', `
+        <p>Share your space analysis with others.</p>
+        <div style="margin-top: 20px;">
+          <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="copyToClipboard()">
+            <i class="fas fa-copy"></i> Copy Link
+          </button>
+        </div>
+      `);
+    }
+
+    function generateBlueprint() {
+      showModal('Generate Blueprint', `
+        <p>Our AI ninja will generate a detailed blueprint based on your space analysis.</p>
+        <p style="color: var(--text-muted); margin-top: 10px;">This feature uses advanced CAD generation to create accurate floor plans and construction documents.</p>
+        <button class="btn btn-ninja" style="width: 100%; margin-top: 20px;" onclick="closeModal()">
+          <i class="fas fa-drafting-compass"></i> Coming Soon
+        </button>
+      `);
+    }
+
+    function autoProcure() {
+      showModal('Auto Procure', `
+        <p>Automatically source all items from your shopping list from trusted suppliers.</p>
+        <p style="color: var(--text-muted); margin-top: 10px;">Our ninja network connects with local and online suppliers to get you the best prices.</p>
+        <button class="btn btn-ninja" style="width: 100%; margin-top: 20px;" onclick="closeModal()">
+          <i class="fas fa-truck"></i> Coming Soon
+        </button>
+      `);
+    }
+
+    function downloadReport(format) {
+      // Placeholder for actual download functionality
+      closeModal();
+      showModal('Download Started', `
+        <p style="text-align: center;">
+          <i class="fas fa-check-circle" style="font-size: 48px; color: var(--ninja-green); margin-bottom: 16px; display: block;"></i>
+          Your ${format.toUpperCase()} report is being generated!
+        </p>
+      `);
+    }
+
+    async function copyToClipboard() {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        closeModal();
+        showModal('Copied!', `
+          <p style="text-align: center;">
+            <i class="fas fa-check-circle" style="font-size: 48px; color: var(--ninja-green); margin-bottom: 16px; display: block;"></i>
+            Link copied to clipboard!
+          </p>
+        `);
+      } catch (err) {
+        console.log('Copy failed:', err);
+      }
+    }
+
+    // Modal functions
+    function showModal(title, content) {
+      const modal = document.getElementById('confirm-modal');
+      modal.querySelector('h3').textContent = '🥷 ' + title;
+      document.getElementById('modal-body').innerHTML = content;
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('confirm-modal').classList.remove('active');
+    }
+
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('confirm-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'confirm-modal') closeModal();
+    });
+
+    // Expose functions globally
+    window.resetToUpload = resetToUpload;
+    window.exportReport = exportReport;
+    window.shareResults = shareResults;
+    window.generateBlueprint = generateBlueprint;
+    window.autoProcure = autoProcure;
+    window.downloadReport = downloadReport;
+    window.closeModal = closeModal;
+  </script>
+<div id="analysis-failsafe" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.9);
+  z-index:3000;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:white;
+">
+  <div>
+    <h2>🥷 Ninja recovered the mission</h2>
+    <p>The analysis stalled safely.</p>
+    <button class="btn btn-primary" onclick="resetToUpload()">
+      Restart Scan
+    </button>
+  </div>
+</div>
+</body>
+</html>
